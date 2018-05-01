@@ -49,8 +49,6 @@ object Types {
     override val ident: String = "Bytes"
   }
 
-  sealed trait Parametrized
-
   sealed trait ECollection extends EType
 
   case class EList(valT: EType) extends EType with ECollection {
@@ -79,6 +77,17 @@ object Types {
 
     override def equals(obj: Any): Boolean = obj match {
       case o: EOption => o.inT == this.inT
+      case _ => false
+    }
+  }
+
+  case class EProduct(override val ident: String, fields: Map[String, EType]) extends EType {
+    override type Underlying = Schema.TypedObject
+
+    override def equals(obj: Any): Boolean = obj match {
+      case p: EProduct =>
+        if (p.fields.size != this.fields.size) false
+        else p.fields.zip(this.fields).forall { case ((f1, _), (f2, _)) => f1 == f2 }
       case _ => false
     }
   }

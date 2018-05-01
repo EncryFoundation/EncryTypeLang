@@ -9,8 +9,6 @@ object Parser {
   import WsApi._
   import fastparse.noApi._
 
-  import Ast._
-
   val ws = P( " " )
   val wss = P( ws.rep(min = 1) )
 
@@ -26,21 +24,21 @@ object Parser {
   val uppercase: all.Parser[Unit] = P( CharIn('A' to 'Z') )
   val digit: all.Parser[Unit] =     P( CharIn('0' to '9') )
 
-  val Ident: P[Identifier] = P( letter.rep ).!.map(Ast.Identifier)
+  val Ident: P[Ast.Identifier] = P( letter.rep ).!.map(Ast.Identifier)
 
-  val typeParams: P[Seq[Identifier]] = P( "[" ~ Ident.rep(1, ",") ~ ",".? ~ "]" )
+  val typeParams: P[Seq[Ast.Identifier]] = P( "[" ~ Ident.rep(1, ",") ~ ",".? ~ "]" )
 
-  val typeDeclaration: P[TypeIdentifier] = P( ":" ~ Ident ~ typeParams.? ).map { case (tpeN, tpsOpt) =>
+  val typeDeclaration: P[Ast.TypeIdentifier] = P( ":" ~ Ident ~ typeParams.? ).map { case (tpeN, tpsOpt) =>
     Ast.TypeIdentifier(tpeN, tpsOpt.map(_.toList).getOrElse(List.empty))
   }
 
-  val field: P[Field] = P( "field" ~ Ident ~ typeDeclaration ).map { case (id, td) => Field(id, td) }
+  val field: P[Ast.Field] = P( "field" ~ Ident ~ typeDeclaration ).map { case (id, td) => Ast.Field(id, td) }
 
-  val fields: P[Seq[Field]] = P( field.rep(min = 1, ";") ~ ";".? )
+  val fields: P[Seq[Ast.Field]] = P( field.rep(min = 1, ";") ~ ";".? )
 
-  val typeDescr: P[Type] = P( "type" ~ Ident ~ "(" ~ fields ~ ")" ).map { case (id, flds) => Type(id, flds.toList) }
+  val typeDescr: P[Ast.Type] = P( "type" ~ Ident ~ "(" ~ fields ~ ")" ).map { case (id, flds) => Ast.Type(id, flds.toList) }
 
-  val schema: P[Seq[Type]] = P( spaces.? ~ typeDescr.repX(0, spaces) ~ spaces.? ).map(_.toSeq)
+  val schema: P[Seq[Ast.Type]] = P( spaces.? ~ typeDescr.repX(0, spaces) ~ spaces.? ).map(_.toSeq)
 
-  def parse(source: String): core.Parsed[Seq[Type], Char, String] = ( schema ~ End ).parse(source)
+  def parse(source: String): core.Parsed[Seq[Ast.Type], Char, String] = ( schema ~ End ).parse(source)
 }
