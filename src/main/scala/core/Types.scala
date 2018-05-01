@@ -78,7 +78,7 @@ object Types {
   }
 
   case class EProduct(override val ident: String, fields: Map[String, EType]) extends EType {
-    override type Underlying = Schema.TypedObject
+    override type Underlying = TypedObject
 
     override def equals(obj: Any): Boolean = obj match {
       case p: EProduct =>

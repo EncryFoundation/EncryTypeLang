@@ -1,13 +1,8 @@
 package core
 
-object Schema {
+sealed trait BoxedVal { val tpe: Types.EType }
 
-  case class Schema(types: List[TypedObject])
-
-  case class Field(id: String, value: BoxedVal)
-  case class TypedObject(id: String, fields: List[Field])
-
-  sealed trait BoxedVal { val tpe: Types.EType }
+object BoxedVal {
 
   case class IntBox(inner: Int) extends BoxedVal { override val tpe: Types.EType = Types.EInt }
   case class LongBox(inner: Long) extends BoxedVal { override val tpe: Types.EType = Types.ELong }
