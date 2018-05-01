@@ -24,10 +24,6 @@ object Types {
     override type Underlying = Unit
     override val ident: String = "Any"
   }
-  case object EUnit extends EType with EPrimitive {
-    override type Underlying = Unit
-    override val ident: String = "Unit"
-  }
   case object EBoolean extends EType with EPrimitive {
     override type Underlying = Boolean
     override val ident: String = "Bool"
