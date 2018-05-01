@@ -27,9 +27,25 @@ class ParserTest extends PropSpec with Matchers {
         |    field age: Int;
         |)
         |
-        |type Customer(
+        |type User(
+        |    field id: Int;
+        |    field aliases: List;
+        |    field person: Person;
+        |    field email: String;
+        |)
+      """.stripMargin
+
+    val res = Parser.parse(source)
+
+    res.isInstanceOf[Parsed.Success[Seq[Ast.Type]]] shouldBe true
+  }
+
+  property("Type description with parametrized type") {
+    val source =
+      """
+        |type User(
         |    field name: String;
-        |    field phone: String;
+        |    field aliases: List[String];
         |)
       """.stripMargin
 

@@ -6,7 +6,7 @@ object Ast {
 
   case class Field(id: Identifier, tpe: TypeIdentifier)
 
-  case class TypeIdentifier(id: Identifier, typeParams: List[TypeIdentifier])
+  case class TypeIdentifier(id: Identifier, typeParams: List[Identifier])
 
   case class Identifier(name: String)
 

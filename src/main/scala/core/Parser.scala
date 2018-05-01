@@ -28,7 +28,7 @@ object Parser {
 
   val Ident: P[Identifier] = P( letter.rep ).!.map(Ast.Identifier)
 
-  val typeParams: P[Seq[TypeIdentifier]] = P( "[" ~ typeDeclaration.rep(sep = ",") ~ "]" )
+  val typeParams: P[Seq[Identifier]] = P( "[" ~ Ident.rep(1, ",") ~ ",".? ~ "]" )
 
   val typeDeclaration: P[TypeIdentifier] = P( ":" ~ Ident ~ typeParams.? ).map { case (tpeN, tpsOpt) =>
     Ast.TypeIdentifier(tpeN, tpsOpt.map(_.toList).getOrElse(List.empty))
