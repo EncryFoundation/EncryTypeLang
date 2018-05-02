@@ -1,10 +1,12 @@
 package core
 
+import scala.util.{Failure, Success, Try}
+
 class Interpreter {
 
   import Interpreter._
 
-  def interpret(types: Seq[Ast.Type]): Seq[Types.EProduct] = {
+  def interpret(types: Seq[Ast.Type]): InterpretationResult = Try {
     types.foldLeft(Types.primitives.map(t => t.ident -> t).toMap, Seq.empty[Types.EProduct]) { case ((scope, acc), tpe) =>
       val prod = Types.EProduct(tpe.id.name, tpe.fields.map { case Ast.Field(id, tpeId) =>
         val tpe = {
@@ -21,11 +23,16 @@ class Interpreter {
         id.name -> tpe
       })
       scope.updated(prod.ident, prod) -> (acc :+ prod)
-    }
-  }._2
+    }._2
+  } match {
+    case Success(r) => Right(r)
+    case Failure(err: InterpretationError) => Left(err)
+  }
 }
 
 object Interpreter {
+
+  type InterpretationResult = Either[InterpretationError, Seq[Types.EProduct]]
 
   class InterpretationError extends Error
 
