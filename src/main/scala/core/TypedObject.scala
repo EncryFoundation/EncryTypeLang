@@ -9,7 +9,7 @@ import scala.util.Try
 
 case class Val(tpe: EType, value: Any)
 
-class TypedObject private[core](typeFingerprint: TypeFingerprint, fields: List[(String, Val)]) {
+class TypedObject private[core](typeFingerprint: TypeFingerprint, fields: Seq[(String, Val)]) {
 
   private val serializer = TypedObjectSerializer
 
@@ -25,7 +25,7 @@ class TypedObject private[core](typeFingerprint: TypeFingerprint, fields: List[(
 
 object TypedObject {
 
-  def apply(tpe: EProduct, args: List[Any]): TypedObject = {
+  def apply(tpe: EProduct, args: Any*): TypedObject = {
     assert(tpe.fields.size == args.size)
     val values = args.zip(tpe.fields).map {
       case (i, (n, t)) if i.isInstanceOf[t.Underlying@unchecked] =>

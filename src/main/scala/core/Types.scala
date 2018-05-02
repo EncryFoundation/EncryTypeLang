@@ -105,6 +105,13 @@ object Types {
     val typeCode: Byte = 9.toByte
   }
 
+  // Placeholder for not inferred type.
+  case object NIType extends EType {
+    override type Underlying = Nothing
+    override val ident: String = "NotInferred"
+    override val typeCode: Byte = (-1).toByte
+  }
+
   case class EProduct(override val ident: String, fields: List[(String, EType)]) extends EType {
     override type Underlying = TypedObject
     override val typeCode: Byte = EProduct.typeCode
@@ -126,4 +133,21 @@ object Types {
   object EProduct {
     val typeCode: Byte = 10.toByte
   }
+
+  lazy val allTypes: Seq[EType] = Seq(
+    EAny,
+    EInt,
+    ELong,
+    EString,
+    EBoolean,
+    EByteVector,
+    EList(NIType),
+    EDict(NIType, NIType),
+    EOption(NIType),
+    EProduct("null", List.empty)
+  )
+
+  lazy val typesMap: Map[String, EType] = allTypes.map(t => t.ident -> t).toMap
+
+  def typeByIdent(id: String): Option[EType] = typesMap.get(id)
 }
