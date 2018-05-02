@@ -12,8 +12,8 @@ Type schema example:
 
     type Customer(
         field name: String;
-        field phone: String
-        field lastVisit: Long
+        field phone: String;
+        field lastVisit: Long;
     )
 
 Available primitive types:
@@ -24,3 +24,5 @@ Available primitive types:
     Bool
     ByteVector
     List[T]
+    Dict[KT, VT]
+    Option[T]
