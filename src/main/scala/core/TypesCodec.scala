@@ -19,6 +19,7 @@ object TypesCodec {
   implicit def dDict = dTpe.bind[Types.EDict](6)
   implicit def dOpt = dTpe.bind[Types.EOption](7)
   implicit def dProd = dTpe.bind[Types.EProduct](8)
+  implicit def dNit = dTpe.bind[Types.NIType.type](9)
 
   val codec: Codec[EType] = Codec[EType]
 }

@@ -3,7 +3,7 @@ package core
 import fastparse.all._
 import org.scalatest.{Matchers, PropSpec}
 
-class ParserTest extends PropSpec with Matchers {
+class ParserSpec extends PropSpec with Matchers {
 
   property("Type description parsing") {
     val source =

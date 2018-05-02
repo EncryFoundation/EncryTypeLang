@@ -134,17 +134,19 @@ object Types {
     val typeCode: Byte = 10.toByte
   }
 
-  lazy val allTypes: Seq[EType] = Seq(
+  lazy val primitives: Seq[EType] = Seq(
     EAny,
     EInt,
     ELong,
     EString,
     EBoolean,
-    EByteVector,
+    EByteVector
+  )
+
+  lazy val allTypes: Seq[EType] = primitives ++ Seq(
     EList(NIType),
     EDict(NIType, NIType),
     EOption(NIType),
-    EProduct("null", List.empty)
   )
 
   lazy val typesMap: Map[String, EType] = allTypes.map(t => t.ident -> t).toMap
