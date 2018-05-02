@@ -21,6 +21,9 @@ object Types {
 
     override def equals(obj: scala.Any): Boolean = obj match {
       case s: EPrimitive => s.ident == this.ident
+      case c: ECollection => c == this
+      case p: EProduct => p == this
+      case o: EOption => o == this
       case _ => false
     }
   }
