@@ -2,6 +2,7 @@ package encrytl.core
 
 import java.nio.charset.Charset
 
+import scorex.crypto.encode.Base58
 import scorex.crypto.hash.Blake2b256
 
 object Types {
@@ -142,19 +143,23 @@ object Types {
    * Used as a lightweight reflection of the `EProduct`.
    * Substitutes `EProduct` in self-described objects where full type description is redundant.
    */
-  case class ShallowProduct(fingerprint: TypeFingerprint) extends EType {
+  case class ShallowProduct(fingerprintEnc: String) extends EType {
     override type Underlying = TypedObject
     override val ident: String = "-"
     override val typeCode: Byte = ShallowProduct.typeCode
 
     override def equals(obj: Any): Boolean = obj match {
-      case p: EProduct => p.fingerprint sameElements this.fingerprint
-      case sp: ShallowProduct => sp.fingerprint sameElements this.fingerprint
+      case p: EProduct => p.fingerprint sameElements this.fingerprintEnc
+      case sp: ShallowProduct => sp.fingerprintEnc sameElements this.fingerprintEnc
       case _ => false
     }
+
+    def fingerprint: TypeFingerprint = Base58.decode(fingerprintEnc).get
   }
   object ShallowProduct {
     val typeCode: Byte = 11.toByte
+
+    def apply(fingerprint: TypeFingerprint): ShallowProduct = new ShallowProduct(Base58.encode(fingerprint))
   }
 
   lazy val primitives: Seq[EType] = Seq(

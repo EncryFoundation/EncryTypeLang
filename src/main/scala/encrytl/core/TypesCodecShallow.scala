@@ -2,7 +2,7 @@ package encrytl.core
 
 import scala.util.Try
 
-class TypesCodecShallow {
+object TypesCodecShallow {
 
   import Types._
 
