@@ -2,6 +2,7 @@ package encrytl.core
 
 import java.nio.charset.Charset
 
+import com.google.common.primitives.{Booleans, Bytes, Ints, Longs}
 import encrytl.core.Types.{EProduct, EType, TypeFingerprint}
 import scorex.crypto.hash.Blake2b256
 
@@ -12,7 +13,7 @@ case class Val(tpe: EType, value: Any) {
   def castedValue: tpe.Underlying = value.asInstanceOf[tpe.Underlying]
 }
 
-class TypedObject private[core](typeFingerprint: TypeFingerprint, fields: Seq[(String, Val)]) {
+class TypedObject private[core](val typeFingerprint: TypeFingerprint, fields: Seq[(String, Val)]) {
 
   private val serializer = TypedObjectSerializer
 
