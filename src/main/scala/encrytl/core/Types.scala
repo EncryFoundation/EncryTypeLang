@@ -1,4 +1,4 @@
-package core
+package encrytl.core
 
 import java.nio.charset.Charset
 
@@ -108,10 +108,13 @@ object Types {
   // Placeholder for not inferred type.
   case object NIType extends EType {
     override type Underlying = Nothing
-    override val ident: String = "NotInferred"
+    override val ident: String = "-"
     override val typeCode: Byte = (-1).toByte
   }
 
+  /*
+   * Used as full description of some composite type.
+   */
   case class EProduct(override val ident: String, fields: List[(String, EType)]) extends EType {
     override type Underlying = TypedObject
     override val typeCode: Byte = EProduct.typeCode
@@ -128,10 +131,30 @@ object Types {
         case (acc, (n, v: EProduct)) => acc ++ n.getBytes(Charset.defaultCharset) ++ v.fingerprint
         case (acc, (n, v)) => acc ++ n.getBytes(Charset.defaultCharset) :+ v.typeCode
       }
-    ).take(8)
+    ).take(EProduct.FingerprintLen)
   }
   object EProduct {
     val typeCode: Byte = 10.toByte
+    val FingerprintLen: Int = 8
+  }
+
+  /*
+   * Used as a lightweight reflection of the `EProduct`.
+   * Substitutes `EProduct` in self-described objects where full type description is redundant.
+   */
+  case class ShallowProduct(fingerprint: TypeFingerprint) extends EType {
+    override type Underlying = TypedObject
+    override val ident: String = "-"
+    override val typeCode: Byte = ShallowProduct.typeCode
+
+    override def equals(obj: Any): Boolean = obj match {
+      case p: EProduct => p.fingerprint sameElements this.fingerprint
+      case sp: ShallowProduct => sp.fingerprint sameElements this.fingerprint
+      case _ => false
+    }
+  }
+  object ShallowProduct {
+    val typeCode: Byte = 11.toByte
   }
 
   lazy val primitives: Seq[EType] = Seq(

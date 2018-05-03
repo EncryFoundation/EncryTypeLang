@@ -1,4 +1,4 @@
-package core
+package encrytl.frontend
 
 object Ast {
 

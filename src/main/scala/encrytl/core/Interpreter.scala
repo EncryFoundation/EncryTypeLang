@@ -1,4 +1,6 @@
-package core
+package encrytl.core
+
+import encrytl.frontend.Ast
 
 import scala.util.{Failure, Success, Try}
 

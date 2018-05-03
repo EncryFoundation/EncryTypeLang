@@ -1,4 +1,4 @@
-package core
+package encrytl.frontend
 
 import fastparse.{all, core, noApi}
 

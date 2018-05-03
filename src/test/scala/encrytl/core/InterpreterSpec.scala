@@ -1,5 +1,6 @@
-package core
+package encrytl.core
 
+import encrytl.frontend.{Ast, Parser}
 import fastparse.all._
 import org.scalatest.{Matchers, PropSpec}
 

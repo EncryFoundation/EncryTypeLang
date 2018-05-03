@@ -1,4 +1,4 @@
-package core
+package encrytl.core
 
 sealed trait BoxedVal { val tpe: Types.EType }
 
