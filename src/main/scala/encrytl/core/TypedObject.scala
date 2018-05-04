@@ -63,7 +63,8 @@ object TypedObjectCodec {
         uint8.encode(nBytes.length).require.toByteArray ++ nBytes
       }
       val value = {
-        val vBytes = AnyCodec.encode(v.castedValue).toByteArray
+        val vBytes = AnyCodec.encode(v.castedValue)
+        require(vBytes.length < Short.MaxValue * 2)
         uint16.encode(vBytes.length).require.toByteArray ++ vBytes
       }
       acc ++ name ++ TypesCodecShallow.encode(t) ++ value
