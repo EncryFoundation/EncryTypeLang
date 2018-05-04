@@ -2,8 +2,9 @@ package encrytl.core
 
 import java.nio.charset.Charset
 
-import com.google.common.primitives.{Booleans, Bytes, Ints, Longs}
+import com.google.common.primitives.Bytes
 import encrytl.core.Types.{EProduct, EType, TypeFingerprint}
+import encrytl.core.codec.{AnyCodec, TypesCodecShallow}
 import scorex.crypto.hash.Blake2b256
 
 import scala.util.Try
@@ -13,11 +14,11 @@ case class Val(tpe: EType, value: Any) {
   def castedValue: tpe.Underlying = value.asInstanceOf[tpe.Underlying]
 }
 
-class TypedObject private[core](val typeFingerprint: TypeFingerprint, fields: Seq[(String, Val)]) {
+class TypedObject private[core](val typeFingerprint: TypeFingerprint, val fields: Seq[(String, Val)]) {
 
-  private val serializer = TypedObjectSerializer
+  private val serializer = TypedObjectCodec
 
-  lazy val bytes: Array[Byte] = serializer.toBytes(this)
+  lazy val bytes: Array[Byte] = serializer.encode(this)
 
   lazy val validFingerprint: Boolean = Blake2b256.hash(
     fields.foldLeft(Array.empty[Byte]) {
@@ -49,9 +50,25 @@ object TypedObject {
   }
 }
 
-object TypedObjectSerializer {
+object TypedObjectCodec {
 
-  def toBytes(obj: TypedObject): Array[Byte] = ???
+  import scodec.codecs._
 
-  def parseBytes(bytes: Array[Byte]): Try[TypedObject] = ???
+  def encode(obj: TypedObject): Array[Byte] = Bytes.concat(
+    obj.typeFingerprint,
+    obj.fields.foldLeft(Array.empty[Byte]) { case (acc, (n, v @ Val(t, _))) =>
+      require(n.length <= 25)
+      val name = {
+        val nBytes = string(Charset.defaultCharset).encode(n).require.toByteArray
+        uint8.encode(nBytes.length).require.toByteArray ++ nBytes
+      }
+      val value = {
+        val vBytes = AnyCodec.encode(v.castedValue).toByteArray
+        uint16.encode(vBytes.length).require.toByteArray ++ vBytes
+      }
+      acc ++ name ++ TypesCodecShallow.encode(t) ++ value
+    }
+  )
+
+  def decode(bytes: Array[Byte]): Try[TypedObject] = ???
 }

@@ -1,12 +1,13 @@
-package encrytl.core
+package encrytl.core.codec
 
+import encrytl.core.Types
 import scodec.Codec
 import scodec.codecs.{Discriminated, uint4}
 
 object TypesCodec {
 
-  import Types._
   import scodec.codecs.implicits._
+  import Types._
 
   implicit def dTpe = Discriminated[EType, Int](uint4)
   implicit def dInt = dTpe.bind[Types.EInt.type](0)

@@ -1,4 +1,6 @@
-package encrytl.core
+package encrytl.core.codec
+
+import encrytl.core.Types
 
 import scala.util.Try
 

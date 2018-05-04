@@ -1,5 +1,6 @@
 package encrytl.core
 
+import encrytl.core.codec.TypesCodecShallow
 import org.scalatest.{Matchers, PropSpec}
 
 class TypesCodecShallowSpec extends PropSpec with Matchers {
