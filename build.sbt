@@ -10,4 +10,5 @@ libraryDependencies ++= Seq(
   "org.scorexfoundation" %% "scrypto" % "2.1.1",
   "org.scodec" %% "scodec-core" % "1.10.3",
   "org.scalatest" %% "scalatest" % "3.0.3" % "test",
+  "io.circe" %% "circe-core" % "0.9.3",
 )

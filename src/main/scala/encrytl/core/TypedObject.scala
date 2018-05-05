@@ -8,6 +8,8 @@ import encrytl.core.codec.{AnyCodec, TypesCodecShallow}
 import scodec.bits.BitVector
 import scorex.crypto.encode.Base58
 import scorex.crypto.hash.Blake2b256
+import io.circe.Json
+import io.circe.syntax._
 
 import scala.util.Try
 
@@ -18,9 +20,13 @@ case class Val(tpe: EType, value: Any) {
 
 class TypedObject private[core](val typeFingerprint: TypeFingerprint, val fields: Seq[(String, Val)]) {
 
-  private val serializer = TypedObjectCodec
+  private val codec = TypedObjectCodec
 
-  lazy val bytes: Array[Byte] = serializer.encode(this)
+  private val jsonCodec = TypedObjectJsonCodec
+
+  lazy val bytes: Array[Byte] = codec.encode(this)
+
+  lazy val json: Json = jsonCodec.encode(this)
 
   lazy val validFingerprint: Boolean = Blake2b256.hash(
     fields.foldLeft(Array.empty[Byte]) {
@@ -52,6 +58,17 @@ object TypedObject {
     }
     new TypedObject(tpe.fingerprint, values)
   }
+}
+
+object TypedObjectJsonCodec {
+
+  // TODO: AnyJson codec.
+  def encode(obj: TypedObject): Json = Map(
+    "fingerprint" -> Base58.encode(obj.typeFingerprint).asJson,
+    "fields" -> obj.fields.map { case (n, v @ Val(t, _)) => (n, t.ident, "value") }.asJson,
+  ).asJson
+
+  def decode(json: Json): Try[TypedObject] = ???
 }
 
 object TypedObjectCodec {
