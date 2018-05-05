@@ -5,6 +5,8 @@ import java.nio.charset.Charset
 import com.google.common.primitives.Bytes
 import encrytl.core.Types.{EProduct, EType, TypeFingerprint}
 import encrytl.core.codec.{AnyCodec, TypesCodecShallow}
+import scodec.bits.BitVector
+import scorex.crypto.encode.Base58
 import scorex.crypto.hash.Blake2b256
 
 import scala.util.Try
@@ -26,6 +28,8 @@ class TypedObject private[core](val typeFingerprint: TypeFingerprint, val fields
       case (acc, (n, v)) => acc ++ n.getBytes(Charset.defaultCharset) :+ v.tpe.typeCode
     }
   ).take(EProduct.FingerprintLen) sameElements typeFingerprint
+
+  override def toString: String = s"TypedObj(${Base58.encode(typeFingerprint)}, $fields)"
 }
 
 object TypedObject {
@@ -56,20 +60,38 @@ object TypedObjectCodec {
 
   def encode(obj: TypedObject): Array[Byte] = Bytes.concat(
     obj.typeFingerprint,
+    uint8.encode(obj.fields.size).require.toByteArray,
     obj.fields.foldLeft(Array.empty[Byte]) { case (acc, (n, v @ Val(t, _))) =>
       require(n.length <= 25)
       val name = {
         val nBytes = string(Charset.defaultCharset).encode(n).require.toByteArray
         uint8.encode(nBytes.length).require.toByteArray ++ nBytes
       }
+      val tpe = {
+        val typeBytes = TypesCodecShallow.encode(t)
+        uint8.encode(typeBytes.length).require.toByteArray ++ typeBytes
+      }
       val value = {
         val vBytes = AnyCodec.encode(v.castedValue)
         require(vBytes.length < Short.MaxValue * 2)
         uint16.encode(vBytes.length).require.toByteArray ++ vBytes
       }
-      acc ++ name ++ TypesCodecShallow.encode(t) ++ value
+      acc ++ name ++ tpe ++ value
     }
   )
 
-  def decode(bytes: Array[Byte]): Try[TypedObject] = ???
+  def decode(bytes: Array[Byte]): Try[TypedObject] = Try {
+    val fingerprint = bytes.take(Types.EProduct.FingerprintLen)
+    val fieldQty = uint8.decode(BitVector(bytes.slice(Types.EProduct.FingerprintLen, Types.EProduct.FingerprintLen + 1))).require.value
+    val fields = (0 until fieldQty).foldLeft(bytes.drop(Types.EProduct.FingerprintLen + 1), Seq.empty[(String, Val)]) { case ((leftBytes, acc), _) =>
+      val nameLen = uint8.decode(BitVector(leftBytes.head)).require.value
+      val name = string(Charset.defaultCharset).decode(BitVector(leftBytes.slice(1, 1 + nameLen))).require.value
+      val tpeLen = uint8.decode(BitVector(leftBytes.slice(1 + nameLen, 1 + nameLen + 1))).require.value
+      val tpe = TypesCodecShallow.decode(leftBytes.slice(1 + nameLen + 1, 1 + nameLen + 1 + tpeLen)).get
+      val valLen = uint16.decode(BitVector(leftBytes.slice(1 + nameLen + 1 + tpeLen, 1 + nameLen + 1 + tpeLen + 2))).require.value
+      val value = AnyCodec.decode(tpe, leftBytes.slice(1 + nameLen + 1 + tpeLen + 2, 1 + nameLen + 1 + tpeLen + 2 + valLen)).get
+        leftBytes.drop(1 + nameLen + 1 + tpeLen + 2 + valLen) -> (acc :+ (name, Val(tpe, value)))
+    }._2
+    new TypedObject(fingerprint, fields)
+  }
 }

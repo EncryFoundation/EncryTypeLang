@@ -2,14 +2,18 @@ package encrytl.core
 
 import org.scalatest.{Matchers, PropSpec}
 
-import scala.util.Try
-
 class TypedObjectCodecSpec extends PropSpec with Matchers {
 
-  property("Simple object encoding") {
+  property("Simple object encoding/decoding") {
 
     val obj = new TypedObject(Array.fill(8)(1.toByte), Seq("name" -> Val(Types.EString, "John"), "age" -> Val(Types.EInt, 28)))
 
-    Try(TypedObjectCodec.encode(obj)).isSuccess shouldBe true
+    val objEnc = TypedObjectCodec.encode(obj)
+
+    val objDecTry = TypedObjectCodec.decode(objEnc)
+
+    objDecTry.isSuccess shouldBe true
+
+    objDecTry.get.typeFingerprint sameElements obj.typeFingerprint shouldBe true
   }
 }
