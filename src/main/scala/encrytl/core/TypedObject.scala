@@ -4,7 +4,7 @@ import java.nio.charset.Charset
 
 import com.google.common.primitives.Bytes
 import encrytl.core.Types.{EProduct, EType, TypeFingerprint}
-import encrytl.core.codec.{AnyCodec, TypesCodecShallow}
+import encrytl.core.codec.{AnyCodec, AnyJsonEncoder, TypesCodecShallow}
 import scodec.bits.BitVector
 import scorex.crypto.encode.Base58
 import scorex.crypto.hash.Blake2b256
@@ -62,10 +62,9 @@ object TypedObject {
 
 object TypedObjectJsonCodec {
 
-  // TODO: AnyJson codec.
   def encode(obj: TypedObject): Json = Map(
     "fingerprint" -> Base58.encode(obj.typeFingerprint).asJson,
-    "fields" -> obj.fields.map { case (n, v @ Val(t, _)) => (n, t.ident, "value") }.asJson,
+    "fields" -> obj.fields.map { case (n, v @ Val(t, _)) => (n, t.toString, AnyJsonEncoder.encode(v.castedValue)) }.asJson,
   ).asJson
 
   def decode(json: Json): Try[TypedObject] = ???
