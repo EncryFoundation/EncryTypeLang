@@ -27,6 +27,8 @@ object Types {
       case o: EOption => o == this
       case _ => false
     }
+
+    override def toString: String = this.ident
   }
 
   sealed trait EPrimitive extends EType
@@ -73,6 +75,8 @@ object Types {
       case l: EList => l.valT == this.valT
       case _ => false
     }
+
+    override def toString: String = this.ident + s"[$valT]"
   }
   object EList {
     val typeCode: Byte = 7.toByte
@@ -87,6 +91,8 @@ object Types {
       case d: EDict => d.keyT == this.keyT && d.valT == this.valT
       case _ => false
     }
+
+    override def toString: String = this.ident + s"[$keyT, $valT]"
   }
   object EDict {
     val typeCode: Byte = 8.toByte
@@ -101,6 +107,8 @@ object Types {
       case o: EOption => o.inT == this.inT
       case _ => false
     }
+
+    override def toString: String = this.ident + s"[$inT]"
   }
   object EOption {
     val typeCode: Byte = 9.toByte
@@ -113,9 +121,7 @@ object Types {
     override val typeCode: Byte = (-1).toByte
   }
 
-  /*
-   * Used as full description of some composite type.
-   */
+  /** Used as full description of some composite type. */
   case class EProduct(override val ident: String, fields: List[(String, EType)]) extends EType {
     override type Underlying = TypedObject
     override val typeCode: Byte = EProduct.typeCode
@@ -139,10 +145,10 @@ object Types {
     val FingerprintLen: Int = 8
   }
 
-  /*
-   * Used as a lightweight reflection of the `EProduct`.
-   * Substitutes `EProduct` in self-described objects where full type description is redundant.
-   */
+  /**
+    * Used as a lightweight reflection of the `EProduct`.
+    * Substitutes `EProduct` in self-described objects where full type description is redundant.
+    */
   case class ShallowProduct(fingerprintEnc: String) extends EType {
     override type Underlying = TypedObject
     override val ident: String = "-"
