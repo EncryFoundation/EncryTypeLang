@@ -1,4 +1,6 @@
-name := "EncryTypeLang"
+organization := "org.encryfoundation"
+
+name := "encry-tl"
 
 version := "0.1"
 
