@@ -20,6 +20,8 @@ object Types {
 
     def isCollection: Boolean = this.isInstanceOf[ECollection]
 
+    def isProduct: Boolean = this.isInstanceOf[EProduct] || this.isInstanceOf[ShallowProduct]
+
     def isOption: Boolean = this.isInstanceOf[EOption]
 
     override def equals(obj: scala.Any): Boolean = obj match {
@@ -138,7 +140,7 @@ object Types {
     */
   case class ShallowProduct(fingerprintEnc: String) extends EType {
     override type Underlying = TypedObject
-    override val ident: String = "-"
+    override val ident: String = "Object"
     override val typeCode: Byte = ShallowProduct.typeCode
 
     override def equals(obj: Any): Boolean = obj match {
@@ -167,6 +169,7 @@ object Types {
   lazy val allTypes: Seq[EType] = primitives ++ Seq(
     EList(NIType),
     EOption(NIType),
+    ShallowProduct(Array.fill(8)(0.toByte))
   )
 
   lazy val typesMap: Map[String, EType] = allTypes.map(t => t.ident -> t).toMap

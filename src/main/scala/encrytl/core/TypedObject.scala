@@ -9,9 +9,8 @@ import encrytl.frontend.Parser
 import scodec.bits.BitVector
 import scorex.crypto.encode.Base58
 import scorex.crypto.hash.Blake2b256
-import io.circe.{Decoder, HCursor, Json}
+import io.circe.{ACursor, Decoder, HCursor, Json}
 import io.circe.syntax._
-import scorex.crypto.signatures.{PublicKey, Signature}
 
 import scala.util.Try
 
@@ -72,7 +71,24 @@ object TypedObjectJsonCodec {
       Map("key" -> n.asJson, "type" -> t.toString.asJson, "value" -> AnyJsonEncoder.encode(v.castedValue).asJson).asJson }.asJson,
   ).asJson
 
+  // TODO: Implement json decoder properly.
   def decode(json: Json): Try[TypedObject] = io.circe.parser.decode[TypedObject](json.toString).toTry
+
+  private def decodeAs(tpe: EType, c: ACursor): Try[tpe.Underlying] = Try {
+    val valF = c.downField("value")
+    (tpe match {
+      case _: Types.EInt.type => valF.as[Int]
+      case _: Types.ELong.type => valF.as[Long]
+      case _: Types.EString.type => valF.as[String]
+      case _: Types.EBoolean.type => valF.as[Boolean]
+      case _: Types.EByteVector.type => valF.as[String].map(s => Base58.decode(s).get)
+      case Types.EList(_: Types.EInt.type) => valF.as[List[Int]]
+      case Types.EList(_: Types.ELong.type) => valF.as[List[Long]]
+      case Types.EList(_: Types.EString.type) => valF.as[List[String]]
+      case Types.EList(_: Types.EBoolean.type) => valF.as[List[Boolean]]
+      case Types.EList(_: Types.EByteVector.type) => valF.as[List[String]].map(_.map(Base58.decode))
+    }).right.get.asInstanceOf[tpe.Underlying]
+  }
 
   implicit val objJsonDecoder: Decoder[TypedObject] = (c: HCursor) => {
     for {
@@ -88,12 +104,8 @@ object TypedObjectJsonCodec {
       key <- c.downField("key").as[String]
       tpe <- c.downField("type").as[String]
     } yield {
-      val tpeR = new Interpreter().interpretType(Parser.parseType(tpe).get.value)
-      val value = (tpeR match {
-        case _: Types.EInt.type => c.downField("value").as[Int]
-        case _: Types.ELong.type => c.downField("value").as[Long]
-        case _: Types.EString.type => c.downField("value").as[String]
-      }).right.get
+      val tpeR = new Interpreter().interpretType(Parser.parseType(tpe).get.value, shallow = true)
+      val value = if (tpeR.isProduct) decode(c.downField("value").focus.get).get else decodeAs(tpeR, c).get
       (key, tpeR, value)
     }
   }
