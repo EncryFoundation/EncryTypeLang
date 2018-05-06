@@ -5,11 +5,13 @@ import java.nio.charset.Charset
 import com.google.common.primitives.Bytes
 import encrytl.core.Types.{EProduct, EType, TypeFingerprint}
 import encrytl.core.codec.{AnyCodec, AnyJsonEncoder, TypesCodecShallow}
+import encrytl.frontend.Parser
 import scodec.bits.BitVector
 import scorex.crypto.encode.Base58
 import scorex.crypto.hash.Blake2b256
-import io.circe.Json
+import io.circe.{Decoder, HCursor, Json}
 import io.circe.syntax._
+import scorex.crypto.signatures.{PublicKey, Signature}
 
 import scala.util.Try
 
@@ -62,12 +64,39 @@ object TypedObject {
 
 object TypedObjectJsonCodec {
 
+  type Field = (String, EType, Any)
+
   def encode(obj: TypedObject): Json = Map(
     "fingerprint" -> Base58.encode(obj.typeFingerprint).asJson,
-    "fields" -> obj.fields.map { case (n, v @ Val(t, _)) => (n, t.toString, AnyJsonEncoder.encode(v.castedValue)) }.asJson,
+    "fields" -> obj.fields.map { case (n, v @ Val(t, _)) =>
+      Map("key" -> n.asJson, "type" -> t.toString.asJson, "value" -> AnyJsonEncoder.encode(v.castedValue).asJson).asJson }.asJson,
   ).asJson
 
-  def decode(json: Json): Try[TypedObject] = ???
+  def decode(json: Json): Try[TypedObject] = io.circe.parser.decode[TypedObject](json.toString).toTry
+
+  implicit val objJsonDecoder: Decoder[TypedObject] = (c: HCursor) => {
+    for {
+      fingerprint <- c.downField("fingerprint").as[String]
+      fields <- c.downField("fields").as[List[Field]]
+    } yield {
+      new TypedObject(Base58.decode(fingerprint).get, fields.map { case (n, t, v) => n -> Val(t, v) })
+    }
+  }
+
+  implicit val fieldJsonDecoder: Decoder[Field] = (c: HCursor) => {
+    for {
+      key <- c.downField("key").as[String]
+      tpe <- c.downField("type").as[String]
+    } yield {
+      val tpeR = new Interpreter().interpretType(Parser.parseType(tpe).get.value)
+      val value = (tpeR match {
+        case _: Types.EInt.type => c.downField("value").as[Int]
+        case _: Types.ELong.type => c.downField("value").as[Long]
+        case _: Types.EString.type => c.downField("value").as[String]
+      }).right.get
+      (key, tpeR, value)
+    }
+  }
 }
 
 object TypedObjectCodec {

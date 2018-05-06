@@ -13,7 +13,7 @@ class Interpreter {
     case Failure(err: InterpretationError) => Left(err)
   }
 
-  private def interpretType(tpe: Ast.Type): Types.EType = tpe match {
+  def interpretType(tpe: Ast.Type): Types.EType = tpe match {
     case Ast.SimpleType(id, tps) =>
       val typeParams = tps.map(interpretType)
       Types.typeByIdent(id.name).map {

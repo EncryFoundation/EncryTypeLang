@@ -6,8 +6,6 @@ object WsApi extends fastparse.WhitespaceApi.Wrapper(Parser.wsComment)
 
 object Parser {
 
-  object WsApi extends fastparse.WhitespaceApi.Wrapper(wsComment)
-
   import WsApi._
   import fastparse.noApi._
 
@@ -45,6 +43,8 @@ object Parser {
   def schema: P[Ast.Schema] = P( "schema" ~ Ident ~ ":" ~ tpe ).map { case (id, tp) => Ast.Schema(id, tp) }
 
   def schemas: P[Seq[Ast.Schema]] = P( spaces.? ~ schema.repX(0, spaces) ~ spaces.? ).map(_.toSeq)
+
+  def parseType(source: String):  core.Parsed[Ast.Type, Char, String] = ( tpe ~ End ).parse(source)
 
   def parse(source: String): core.Parsed[Seq[Ast.Schema], Char, String] = ( schemas ~ End ).parse(source)
 }
