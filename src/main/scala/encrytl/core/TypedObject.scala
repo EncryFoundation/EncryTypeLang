@@ -74,6 +74,7 @@ object TypedObjectJsonCodec {
   // TODO: Implement json decoder properly.
   def decode(json: Json): Try[TypedObject] = io.circe.parser.decode[TypedObject](json.toString).toTry
 
+  // TODO: Fully manual decoding required in order to handle `List[Object]`.
   private def decodeAs(tpe: EType, c: ACursor): Try[tpe.Underlying] = Try {
     val valF = c.downField("value")
     (tpe match {
