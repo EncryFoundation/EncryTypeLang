@@ -9,6 +9,8 @@ object Types {
 
   type TypeFingerprint = Array[Byte]
 
+  type Field = (String, EType)
+
   sealed trait EType {
     type Underlying
     val ident: String
@@ -82,22 +84,6 @@ object Types {
     val typeCode: Byte = 7.toByte
   }
 
-  case class EDict(keyT: EType, valT: EType) extends EType with ECollection {
-    override type Underlying = Map[keyT.Underlying, valT.Underlying]
-    override val ident: String = "Dict"
-    override val typeCode: Byte = EDict.typeCode
-
-    override def equals(obj: Any): Boolean = obj match {
-      case d: EDict => d.keyT == this.keyT && d.valT == this.valT
-      case _ => false
-    }
-
-    override def toString: String = this.ident + s"[$keyT, $valT]"
-  }
-  object EDict {
-    val typeCode: Byte = 8.toByte
-  }
-
   case class EOption(inT: EType) extends EType {
     override type Underlying = Option[inT.Underlying]
     override val ident: String = "Option"
@@ -122,8 +108,9 @@ object Types {
   }
 
   /** Used as full description of some composite type. */
-  case class EProduct(override val ident: String, fields: List[(String, EType)]) extends EType {
+  case class EProduct(fields: List[Field]) extends EType {
     override type Underlying = TypedObject
+    override val ident: String = "Object"
     override val typeCode: Byte = EProduct.typeCode
 
     override def equals(obj: Any): Boolean = obj match {
@@ -179,7 +166,6 @@ object Types {
 
   lazy val allTypes: Seq[EType] = primitives ++ Seq(
     EList(NIType),
-    EDict(NIType, NIType),
     EOption(NIType),
   )
 

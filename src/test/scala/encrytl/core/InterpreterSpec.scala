@@ -8,46 +8,51 @@ class InterpreterSpec extends PropSpec with Matchers {
 
   property("Valid schema interpretation") {
 
-    val Product1 = Types.EProduct("Person", List("name" -> Types.EString, "age" -> Types.EInt))
-    val Product2 = Types.EProduct("Point", List("x" -> Types.EInt, "y" -> Types.EInt))
+    val Schema1 = Schema("Person", Types.EProduct(List("name" -> Types.EString, "age" -> Types.EInt)))
+    val Schema2 = Schema("Point", Types.EProduct(List("x" -> Types.EInt, "y" -> Types.EInt)))
 
     val source =
       """
-        |type Person(
-        |    field name: String;
-        |    field age: Int;
+        |schema Person:Object(
+        |    name:String;
+        |    age:Int;
         |)
         |
-        |type Point(
-        |    field x: Int;
-        |    field y: Int;
+        |schema Point:Object(
+        |    x:Int;
+        |    y:Int;
         |)
       """.stripMargin
 
-    val types = Parser.parse(source).asInstanceOf[Parsed.Success[Seq[Ast.Type]]].value
+    val schemas = Parser.parse(source).asInstanceOf[Parsed.Success[Seq[Ast.Schema]]].value
 
-    val res = new Interpreter().interpret(types)
+    val interpreter = new Interpreter()
 
-    res.isRight shouldBe true
+    val schemasInterp = schemas.map(interpreter.interpret)
 
-    res.right.get.zip(Seq(Product1, Product2)).foreach { case (p1, p2) => (p1 == p2) shouldBe true }
+    schemasInterp.forall(_.isRight) shouldBe true
+
+    Seq(Schema1, Schema2).zip(schemasInterp.map(_.right.get)).forall { case (s1, s2) => s1 == s2 } shouldBe true
   }
 
   property("Invalid schema interpretation (Unresolved type)") {
 
     val source =
       """
-        |type Person(
-        |    field name: String;
-        |    field age: Int;
-        |    field email: Email;
+        |schema Person:Object(
+        |    name:String;
+        |    age:Age;
         |)
       """.stripMargin
 
     val types = Parser.parse(source).asInstanceOf[Parsed.Success[Seq[Ast.Type]]].value
 
-    val res = new Interpreter().interpret(types)
+    val schemas = Parser.parse(source).asInstanceOf[Parsed.Success[Seq[Ast.Schema]]].value
 
-    res.isRight shouldBe false
+    val interpreter = new Interpreter()
+
+    val schemasInterp = schemas.map(interpreter.interpret)
+
+    schemasInterp.forall(_.isRight) shouldBe false
   }
 }

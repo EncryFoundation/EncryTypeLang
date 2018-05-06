@@ -17,7 +17,6 @@ object TypesCodec {
   implicit def dAny = dTpe.bind[Types.EAny.type](4)
   implicit def dBool = dTpe.bind[Types.EBoolean.type](5)
   implicit def dList = dTpe.bind[Types.EList](5)
-  implicit def dDict = dTpe.bind[Types.EDict](6)
   implicit def dOpt = dTpe.bind[Types.EOption](7)
   implicit def dProd = dTpe.bind[Types.EProduct](8)
   implicit def dSProd = dTpe.bind[Types.ShallowProduct](9)

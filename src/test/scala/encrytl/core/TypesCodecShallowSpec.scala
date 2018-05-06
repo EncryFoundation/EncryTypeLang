@@ -7,7 +7,7 @@ class TypesCodecShallowSpec extends PropSpec with Matchers {
 
   property("Parametrized type encoding and decoding") {
 
-    val t = Types.EDict(Types.EString, Types.ELong)
+    val t = Types.EList(Types.EString)
 
     val encoded = TypesCodecShallow.encode(t)
 
@@ -20,7 +20,7 @@ class TypesCodecShallowSpec extends PropSpec with Matchers {
 
   property("Product type encoding and decoding") {
 
-    val t = Types.EProduct("Person", List("name" -> Types.EString, "age" -> Types.EInt))
+    val t = Types.EProduct(List("name" -> Types.EString, "age" -> Types.EInt))
 
     val encoded = TypesCodecShallow.encode(t)
 

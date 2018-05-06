@@ -2,11 +2,15 @@ package encrytl.frontend
 
 object Ast {
 
-  case class Type(id: Identifier, fields: List[Field])
+  type Field = (Identifier, Type)
 
-  case class Field(id: Identifier, tpe: TypeIdentifier)
+  case class Schema(id: Identifier, tpe: Type)
 
-  case class TypeIdentifier(id: Identifier, typeParams: List[Identifier])
+  sealed trait Type
+
+  case class SimpleType(id: Identifier, typeParams: List[Type]) extends Type
+
+  case class ProductType(fields: List[Field]) extends Type
 
   case class Identifier(name: String)
 

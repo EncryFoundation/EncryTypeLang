@@ -6,39 +6,45 @@ object WsApi extends fastparse.WhitespaceApi.Wrapper(Parser.wsComment)
 
 object Parser {
 
+  object WsApi extends fastparse.WhitespaceApi.Wrapper(wsComment)
+
   import WsApi._
   import fastparse.noApi._
 
-  val ws = P( " " )
-  val wss = P( ws.rep(min = 1) )
+  def ws = P( " " )
+  def wss = P( ws.rep(min = 1) )
 
-  val comment: all.Parser[Unit] =   P( "#" ~ CharsWhile(_ != '\n', min = 0) )
-  val wsComment: all.Parser[Unit] = P( (CharsWhileIn(" \n") | comment | "\\\n").rep )
+  def comment: all.Parser[Unit] =   P( "#" ~ CharsWhile(_ != '\n', min = 0) )
+  def wsComment: all.Parser[Unit] = P( (CharsWhileIn(" \n") | comment | "\\\n").rep )
 
-  val space: noApi.Parser[Unit] = P( CharIn(" \n") )
+  def space: noApi.Parser[Unit] = P( CharIn(" \n") )
 
-  val spaces = P( space.repX )
+  def spaces = P( space.repX )
 
-  val letter: all.Parser[Unit] =    P( lowercase | uppercase )
-  val lowercase: all.Parser[Unit] = P( CharIn('a' to 'z') )
-  val uppercase: all.Parser[Unit] = P( CharIn('A' to 'Z') )
-  val digit: all.Parser[Unit] =     P( CharIn('0' to '9') )
+  def letter: all.Parser[Unit] =    P( lowercase | uppercase )
+  def lowercase: all.Parser[Unit] = P( CharIn('a' to 'z') )
+  def uppercase: all.Parser[Unit] = P( CharIn('A' to 'Z') )
+  def digit: all.Parser[Unit] =     P( CharIn('0' to '9') )
 
-  val Ident: P[Ast.Identifier] = P( letter.rep ).!.map(Ast.Identifier)
+  def Ident: P[Ast.Identifier] = P( letter.rep ).!.map(Ast.Identifier)
 
-  val typeParams: P[Seq[Ast.Identifier]] = P( "[" ~ Ident.rep(1, ",") ~ ",".? ~ "]" )
+  def typeParams: P[Seq[Ast.Type]] = P( "[" ~ tpe.rep(1, ",") ~ ",".? ~ "]" )
 
-  val typeDeclaration: P[Ast.TypeIdentifier] = P( ":" ~ Ident ~ typeParams.? ).map { case (tpeN, tpsOpt) =>
-    Ast.TypeIdentifier(tpeN, tpsOpt.map(_.toList).getOrElse(List.empty))
+  def simpleType: P[Ast.SimpleType] = P( Ident ~ typeParams.? ).map { case (tpeN, tpsOpt) =>
+    Ast.SimpleType(tpeN, tpsOpt.map(_.toList).getOrElse(List.empty))
   }
 
-  val field: P[Ast.Field] = P( "field" ~ Ident ~ typeDeclaration ).map { case (id, td) => Ast.Field(id, td) }
+  def field: P[Ast.Field] = P( Ident ~ ":" ~ tpe )
 
-  val fields: P[Seq[Ast.Field]] = P( field.rep(min = 1, ";") ~ ";".? )
+  def fields: P[Seq[Ast.Field]] = P( field.rep(min = 1, ";") ~ ";".? )
 
-  val typeDescr: P[Ast.Type] = P( "type" ~ Ident ~ "(" ~ fields ~ ")" ).map { case (id, flds) => Ast.Type(id, flds.toList) }
+  def productType: P[Ast.ProductType] = P( "Object" ~ "(" ~ fields ~ ")" ).map(flds => Ast.ProductType(flds.toList))
 
-  val schema: P[Seq[Ast.Type]] = P( spaces.? ~ typeDescr.repX(0, spaces) ~ spaces.? ).map(_.toSeq)
+  def tpe: P[Ast.Type] = P( productType | simpleType )
 
-  def parse(source: String): core.Parsed[Seq[Ast.Type], Char, String] = ( schema ~ End ).parse(source)
+  def schema: P[Ast.Schema] = P( "schema" ~ Ident ~ ":" ~ tpe ).map { case (id, tp) => Ast.Schema(id, tp) }
+
+  def schemas: P[Seq[Ast.Schema]] = P( spaces.? ~ schema.repX(0, spaces) ~ spaces.? ).map(_.toSeq)
+
+  def parse(source: String): core.Parsed[Seq[Ast.Schema], Char, String] = ( schemas ~ End ).parse(source)
 }

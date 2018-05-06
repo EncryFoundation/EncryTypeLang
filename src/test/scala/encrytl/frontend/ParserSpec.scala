@@ -5,47 +5,41 @@ import org.scalatest.{Matchers, PropSpec}
 
 class ParserSpec extends PropSpec with Matchers {
 
-  property("Type description parsing") {
+  property("Simple schema parsing") {
     val source =
       """
-        |type Person(
-        |    field name: String;
-        |    field age: Int;
+        |schema Person:Object(
+        |    name:String;
+        |    age:Int;
         |)
       """.stripMargin
 
     val res = Parser.parse(source)
 
-    res.isInstanceOf[Parsed.Success[Seq[Ast.Type]]] shouldBe true
+    res.isInstanceOf[Parsed.Success[Seq[Ast.Schema]]] shouldBe true
   }
 
-  property("Schema parsing (Multiple types)") {
+  property("Schema with nested objects parsing") {
     val source =
       """
-        |type Person(
-        |    field name: String;
-        |    field age: Int;
-        |)
-        |
-        |type User(
-        |    field id: Int;
-        |    field aliases: List;
-        |    field person: Person;
-        |    field email: String;
+        |schema User:Object(
+        |    person:Object(name:String;age:Int);
+        |    email:String;
         |)
       """.stripMargin
 
     val res = Parser.parse(source)
 
-    res.isInstanceOf[Parsed.Success[Seq[Ast.Type]]] shouldBe true
+    res.isInstanceOf[Parsed.Success[Seq[Ast.Schema]]] shouldBe true
   }
 
-  property("Type description with parametrized type") {
+  property("Schema with parametrized types parsing") {
     val source =
       """
-        |type User(
-        |    field name: String;
-        |    field aliases: List[String];
+        |schema User:Object(
+        |    person:Object(name:String;age:Int);
+        |    sessions:List[Object(id:Long;time:Long)];
+        |    email:String;
         |)
       """.stripMargin
 
