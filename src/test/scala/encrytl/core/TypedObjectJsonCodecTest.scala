@@ -6,7 +6,7 @@ class TypedObjectJsonCodecTest extends PropSpec with Matchers {
 
   property("Object encoding/decoding") {
 
-    val obj = new TypedObject(Array.fill(8)(1.toByte), Seq("name" -> Val(Types.EString, "John"), "age" -> Val(Types.EInt, 28)))
+    val obj = new TypedObject(Seq("name" -> Val(Types.EString, "John"), "age" -> Val(Types.EInt, 28)))
 
     val objEnc = TypedObjectJsonCodec.encode(obj)
 
@@ -14,14 +14,19 @@ class TypedObjectJsonCodecTest extends PropSpec with Matchers {
 
     objDecTry.isSuccess shouldBe true
 
-    objDecTry.get.typeFingerprint sameElements obj.typeFingerprint shouldBe true
+    objDecTry.get.fingerprint sameElements obj.fingerprint shouldBe true
   }
 
   property("Nested objects encoding/decoding") {
 
-    val obj = new TypedObject(Array.fill(8)(1.toByte), Seq("name" -> Val(Types.EString, "John"), "age" -> Val(Types.EInt, 28)))
+    val obj = new TypedObject(Seq("name" -> Val(Types.EString, "John"), "age" -> Val(Types.EInt, 28)))
 
-    val obj2 = new TypedObject(Array.fill(8)(1.toByte), Seq("person" -> Val(Types.ShallowProduct(Array.fill(8)(1.toByte)), obj), "age" -> Val(Types.EInt, 28)))
+    val obj2 = new TypedObject(Seq(
+      "person" -> Val(Types.ShallowProduct(obj.fingerprint), obj),
+      "age" -> Val(Types.EInt, 28))
+    )
+
+    println(obj2.json)
 
     val objEnc = TypedObjectJsonCodec.encode(obj2)
 
@@ -29,6 +34,6 @@ class TypedObjectJsonCodecTest extends PropSpec with Matchers {
 
     objDecTry.isSuccess shouldBe true
 
-    objDecTry.get.typeFingerprint sameElements obj2.typeFingerprint shouldBe true
+    objDecTry.get.fingerprint sameElements obj2.fingerprint shouldBe true
   }
 }

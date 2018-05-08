@@ -19,7 +19,7 @@ case class Val(tpe: EType, value: Any) {
   def castedValue: tpe.Underlying = value.asInstanceOf[tpe.Underlying]
 }
 
-class TypedObject private[core](val typeFingerprint: TypeFingerprint, val fields: Seq[(String, Val)]) {
+class TypedObject private[core](val fields: Seq[(String, Val)]) {
 
   private val codec = TypedObjectCodec
 
@@ -29,14 +29,14 @@ class TypedObject private[core](val typeFingerprint: TypeFingerprint, val fields
 
   lazy val json: Json = jsonCodec.encode(this)
 
-  lazy val validFingerprint: Boolean = Blake2b256.hash(
+  lazy val fingerprint: TypeFingerprint = Blake2b256.hash(
     fields.foldLeft(Array.empty[Byte]) {
       case (acc, (n, Val(t: EProduct, _))) => acc ++ n.getBytes(Charset.defaultCharset) ++ t.fingerprint
       case (acc, (n, v)) => acc ++ n.getBytes(Charset.defaultCharset) :+ v.tpe.typeCode
     }
-  ).take(EProduct.FingerprintLen) sameElements typeFingerprint
+  ).take(EProduct.FingerprintLen)
 
-  override def toString: String = s"TypedObj(${Base58.encode(typeFingerprint)}, $fields)"
+  override def toString: String = s"TypedObj(${Base58.encode(fingerprint)}, $fields)"
 }
 
 object TypedObject {
@@ -48,7 +48,7 @@ object TypedObject {
         n -> Val(t, i.asInstanceOf[t.Underlying])
       case _ => throw new Error("Object construction failed")
     }
-    new TypedObject(tpe.fingerprint, values)
+    new TypedObject(values)
   }
 
   def apply(tpe: EProduct, args: Map[String, Any]): TypedObject = {
@@ -57,7 +57,7 @@ object TypedObject {
       val keyV = args.getOrElse(key, throw new Error("Object construction failed"))
       key -> Val(keyT, keyV.asInstanceOf[keyT.Underlying])
     }
-    new TypedObject(tpe.fingerprint, values)
+    new TypedObject(values)
   }
 }
 
@@ -65,9 +65,10 @@ object TypedObjectJsonCodec {
 
   type Field = (String, EType, Any)
 
+  type Object = List[Field]
+
   def encode(obj: TypedObject): Json = Map(
-    "fingerprint" -> Base58.encode(obj.typeFingerprint).asJson,
-    "fields" -> obj.fields.map { case (n, v @ Val(t, _)) =>
+    "object" -> obj.fields.map { case (n, v @ Val(t, _)) =>
       Map("key" -> n.asJson, "type" -> t.toString.asJson, "value" -> AnyJsonEncoder.encode(v.castedValue).asJson).asJson }.asJson,
   ).asJson
 
@@ -93,10 +94,9 @@ object TypedObjectJsonCodec {
 
   implicit val objJsonDecoder: Decoder[TypedObject] = (c: HCursor) => {
     for {
-      fingerprint <- c.downField("fingerprint").as[String]
-      fields <- c.downField("fields").as[List[Field]]
+      fields <- c.downField("object").as[Object]
     } yield {
-      new TypedObject(Base58.decode(fingerprint).get, fields.map { case (n, t, v) => n -> Val(t, v) })
+      new TypedObject(fields.map { case (n, t, v) => n -> Val(t, v) })
     }
   }
 
@@ -117,7 +117,6 @@ object TypedObjectCodec {
   import scodec.codecs._
 
   def encode(obj: TypedObject): Array[Byte] = Bytes.concat(
-    obj.typeFingerprint,
     uint8.encode(obj.fields.size).require.toByteArray,
     obj.fields.foldLeft(Array.empty[Byte]) { case (acc, (n, v @ Val(t, _))) =>
       require(n.length <= 25)
@@ -139,9 +138,8 @@ object TypedObjectCodec {
   )
 
   def decode(bytes: Array[Byte]): Try[TypedObject] = Try {
-    val fingerprint = bytes.take(Types.EProduct.FingerprintLen)
-    val fieldQty = uint8.decode(BitVector(bytes.slice(Types.EProduct.FingerprintLen, Types.EProduct.FingerprintLen + 1))).require.value
-    val fields = (0 until fieldQty).foldLeft(bytes.drop(Types.EProduct.FingerprintLen + 1), Seq.empty[(String, Val)]) { case ((leftBytes, acc), _) =>
+    val fieldQty = uint8.decode(BitVector(bytes.head)).require.value
+    val fields = (0 until fieldQty).foldLeft(bytes.tail, Seq.empty[(String, Val)]) { case ((leftBytes, acc), _) =>
       val nameLen = uint8.decode(BitVector(leftBytes.head)).require.value
       val name = string(Charset.defaultCharset).decode(BitVector(leftBytes.slice(1, 1 + nameLen))).require.value
       val tpeLen = uint8.decode(BitVector(leftBytes.slice(1 + nameLen, 1 + nameLen + 1))).require.value
@@ -150,6 +148,6 @@ object TypedObjectCodec {
       val value = AnyCodec.decode(tpe, leftBytes.slice(1 + nameLen + 1 + tpeLen + 2, 1 + nameLen + 1 + tpeLen + 2 + valLen)).get
         leftBytes.drop(1 + nameLen + 1 + tpeLen + 2 + valLen) -> (acc :+ (name, Val(tpe, value)))
     }._2
-    new TypedObject(fingerprint, fields)
+    new TypedObject(fields)
   }
 }
