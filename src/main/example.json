@@ -1,0 +1,17 @@
+[
+  {
+    "key": "person",
+    "value": [
+      {
+        "key": "name",
+        "type": "String",
+        "value": "John"
+      },
+      {
+        "key": "age",
+        "type": "Int",
+        "value": 28
+      }
+    ]
+  }
+]

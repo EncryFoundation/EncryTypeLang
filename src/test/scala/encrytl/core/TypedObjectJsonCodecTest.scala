@@ -26,8 +26,6 @@ class TypedObjectJsonCodecTest extends PropSpec with Matchers {
       "age" -> Val(Types.EInt, 28))
     )
 
-    println(obj2.json)
-
     val objEnc = TypedObjectJsonCodec.encode(obj2)
 
     val objDecTry = TypedObjectJsonCodec.decode(objEnc)

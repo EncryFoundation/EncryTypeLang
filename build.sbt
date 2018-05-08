@@ -12,6 +12,7 @@ resolvers += "Sonatype Releases" at "https://oss.sonatype.org/content/repositori
 
 libraryDependencies ++= Seq(
   "com.lihaoyi" %% "fastparse" % "1.0.0",
+  "org.json4s" %% "json4s-jackson" % "3.5.3",
   "com.google.guava" % "guava" % "19.+",
   "org.scorexfoundation" %% "scrypto" % "2.1.1",
   "org.scodec" %% "scodec-core" % "1.10.3",
