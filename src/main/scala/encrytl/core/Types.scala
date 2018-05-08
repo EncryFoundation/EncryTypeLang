@@ -22,13 +22,10 @@ object Types {
 
     def isProduct: Boolean = this.isInstanceOf[EProduct] || this.isInstanceOf[ShallowProduct]
 
-    def isOption: Boolean = this.isInstanceOf[EOption]
-
     override def equals(obj: scala.Any): Boolean = obj match {
       case s: EPrimitive => s.ident == this.ident
       case c: ECollection => c == this
       case p: EProduct => p == this
-      case o: EOption => o == this
       case _ => false
     }
 
@@ -84,22 +81,6 @@ object Types {
   }
   object EList {
     val typeCode: Byte = 7.toByte
-  }
-
-  case class EOption(inT: EType) extends EType {
-    override type Underlying = Option[inT.Underlying]
-    override val ident: String = "Option"
-    override val typeCode: Byte = EOption.typeCode
-
-    override def equals(obj: Any): Boolean = obj match {
-      case o: EOption => o.inT == this.inT
-      case _ => false
-    }
-
-    override def toString: String = this.ident + s"[$inT]"
-  }
-  object EOption {
-    val typeCode: Byte = 9.toByte
   }
 
   // Placeholder for not inferred type.
@@ -168,7 +149,6 @@ object Types {
 
   lazy val allTypes: Seq[EType] = primitives ++ Seq(
     EList(NIType),
-    EOption(NIType),
     ShallowProduct(Array.fill(8)(0.toByte))
   )
 

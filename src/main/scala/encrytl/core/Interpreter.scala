@@ -18,7 +18,6 @@ class Interpreter {
       val typeParams = tps.map(t => interpretType(t))
       Types.typeByIdent(id.name).map {
         case Types.EList(_) if typeParams.size == 1 => Types.EList(typeParams.head)
-        case Types.EOption(_) if typeParams.size == 1 => Types.EOption(typeParams.head)
         case otherT if tps.isEmpty => otherT
         case _ => throw InterpretationError
       }.getOrElse(throw UnresolvedRefError(id.name))
