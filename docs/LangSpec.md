@@ -14,7 +14,7 @@ Type schema example:
     )
     
 Json equivalent of the example above:
-    
+
     {
         "person":{"name":"Julia","age":23},
         "history":{"ltv":23010,"bonus":198},
@@ -24,10 +24,8 @@ Json equivalent of the example above:
 
 Available primitive types:
 
+    Any
     String
-    Int
     Long
     Bool
-    ByteVector
     List[T]
-    Option[T]

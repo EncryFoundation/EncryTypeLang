@@ -4,16 +4,16 @@ import java.nio.charset.Charset
 
 import com.google.common.primitives.Bytes
 import encrytl.core.Types.{EProduct, EType, TypeFingerprint}
-import encrytl.core.codec.{AnyCodec, AnyJsonCodec, Errors, TypesCodecShallow}
-import encrytl.frontend.json.{JsonAst, JsonParser}
+import encrytl.core.codec.{AnyCodec, AnyJsonCodec, TypesCodecShallow}
 import encrytl.frontend.json.JsonAst.JsonVal
+import encrytl.frontend.json.{JsonAst, JsonParser}
 import io.circe.Json
 import io.circe.syntax._
 import scodec.bits.BitVector
 import scorex.crypto.encode.Base58
 import scorex.crypto.hash.Blake2b256
 
-import scala.util.{Failure, Try}
+import scala.util.Try
 
 case class Val(tpe: EType, value: Any) {
 
@@ -64,7 +64,7 @@ object TypedObject {
 
 object TypedObjectJsonCodec {
 
-  import Errors._
+  import codec.Errors._
 
   type Field = (String, EType, Any)
 

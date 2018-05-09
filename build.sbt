@@ -2,7 +2,7 @@ organization := "com.github.oskin1"
 
 name := "encry-tl"
 
-version := "0.1.4"
+version := "0.1.5"
 
 scalaVersion := "2.12.4"
 
@@ -16,8 +16,7 @@ libraryDependencies ++= Seq(
   "org.scorexfoundation" %% "scrypto" % "2.1.1",
   "org.scodec" %% "scodec-core" % "1.10.3",
   "org.scalatest" %% "scalatest" % "3.0.3" % "test",
-  "io.circe" %% "circe-core" % circeVersion,
-  "io.circe" %% "circe-parser" % circeVersion
+  "io.circe" %% "circe-core" % circeVersion
 )
 
 licenses in ThisBuild := Seq("GNU GPL 3.0" -> url("https://github.com/EncryFoundation/EncryTypeLang/blob/master/LICENSE"))
