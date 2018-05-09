@@ -19,14 +19,12 @@ class TypedObjectJsonCodecTest extends PropSpec with Matchers {
 
   property("Nested objects encoding/decoding") {
 
-    val obj = new TypedObject(Seq("name" -> Val(Types.EString, "John"), "age" -> Val(Types.EInt, 28)))
+    val obj = new TypedObject(Seq("name" -> Val(Types.EString, "John"), "age" -> Val(Types.ELong, 28)))
 
     val obj2 = new TypedObject(Seq(
       "person" -> Val(Types.ShallowProduct(obj.fingerprint), obj),
-      "age" -> Val(Types.EInt, 28))
+      "age" -> Val(Types.ELong, 28))
     )
-
-    println(obj2.json)
 
     val objEnc = TypedObjectJsonCodec.encode(obj2)
 

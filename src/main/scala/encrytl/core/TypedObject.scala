@@ -4,15 +4,16 @@ import java.nio.charset.Charset
 
 import com.google.common.primitives.Bytes
 import encrytl.core.Types.{EProduct, EType, TypeFingerprint}
-import encrytl.core.codec.{AnyCodec, AnyJsonEncoder, TypesCodecShallow}
-import encrytl.frontend.Parser
+import encrytl.core.codec.{AnyCodec, AnyJsonCodec, Errors, TypesCodecShallow}
+import encrytl.frontend.json.{JsonAst, JsonParser}
+import encrytl.frontend.json.JsonAst.JsonVal
+import io.circe.Json
+import io.circe.syntax._
 import scodec.bits.BitVector
 import scorex.crypto.encode.Base58
 import scorex.crypto.hash.Blake2b256
-import io.circe.{ACursor, Decoder, HCursor, Json}
-import io.circe.syntax._
 
-import scala.util.Try
+import scala.util.{Failure, Try}
 
 case class Val(tpe: EType, value: Any) {
 
@@ -63,53 +64,27 @@ object TypedObject {
 
 object TypedObjectJsonCodec {
 
+  import Errors._
+
   type Field = (String, EType, Any)
 
   type Object = List[Field]
 
-  def encode(obj: TypedObject): Json = Map(
-    "object" -> obj.fields.map { case (n, v @ Val(t, _)) =>
-      Map("key" -> n.asJson, "type" -> t.toString.asJson, "value" -> AnyJsonEncoder.encode(v.castedValue).asJson).asJson }.asJson,
-  ).asJson
+  def encode(obj: TypedObject): Json = obj.fields.map { case (n, v) =>
+    n -> AnyJsonCodec.encode(v.castedValue).asJson
+  }.toMap.asJson
 
-  // TODO: Implement json decoder properly.
-  def decode(json: Json): Try[TypedObject] = io.circe.parser.decode[TypedObject](json.toString).toTry
-
-  // TODO: Fully manual decoding required in order to handle `List[Object]`.
-  private def decodeAs(tpe: EType, c: ACursor): Try[tpe.Underlying] = Try {
-    val valF = c.downField("value")
-    (tpe match {
-      case _: Types.EInt.type => valF.as[Int]
-      case _: Types.ELong.type => valF.as[Long]
-      case _: Types.EString.type => valF.as[String]
-      case _: Types.EBoolean.type => valF.as[Boolean]
-      case _: Types.EByteVector.type => valF.as[String].map(s => Base58.decode(s).get)
-      case Types.EList(_: Types.EInt.type) => valF.as[List[Int]]
-      case Types.EList(_: Types.ELong.type) => valF.as[List[Long]]
-      case Types.EList(_: Types.EString.type) => valF.as[List[String]]
-      case Types.EList(_: Types.EBoolean.type) => valF.as[List[Boolean]]
-      case Types.EList(_: Types.EByteVector.type) => valF.as[List[String]].map(_.map(Base58.decode))
-    }).right.get.asInstanceOf[tpe.Underlying]
-  }
-
-  implicit val objJsonDecoder: Decoder[TypedObject] = (c: HCursor) => {
-    for {
-      fields <- c.downField("object").as[Object]
-    } yield {
-      new TypedObject(fields.map { case (n, t, v) => n -> Val(t, v) })
+  def decode(json: JsonVal): Try[TypedObject] = Try {
+    json match {
+      case obj: JsonAst.Obj => new TypedObject(obj.value.map { case (n, v) =>
+          n -> AnyJsonCodec.decode(v).map(r => Val(r._1, r._2))
+            .getOrElse(throw DecodingError)
+        })
+      case _ => throw new Error(s"$json is not an object")
     }
   }
 
-  implicit val fieldJsonDecoder: Decoder[Field] = (c: HCursor) => {
-    for {
-      key <- c.downField("key").as[String]
-      tpe <- c.downField("type").as[String]
-    } yield {
-      val tpeR = new Interpreter().interpretType(Parser.parseType(tpe).get.value, shallow = true)
-      val value = if (tpeR.isProduct) decode(c.downField("value").focus.get).get else decodeAs(tpeR, c).get
-      (key, tpeR, value)
-    }
-  }
+  def decode(json: Json): Try[TypedObject] = JsonParser.parse(json.noSpaces).flatMap(decode)
 }
 
 object TypedObjectCodec {

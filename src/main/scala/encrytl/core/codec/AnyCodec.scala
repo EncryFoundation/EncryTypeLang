@@ -46,7 +46,6 @@ object AnyCodec {
           val len = uint16.decode(BitVector(leftBytes.take(2))).require.value
           leftBytes.drop(2 + len) -> (acc :+ decode(inT, leftBytes.slice(2, len + 2)).get.asInstanceOf[inT.Underlying])
         }._2
-      // TODO: Dict and Option
     }).asInstanceOf[tpe.Underlying]
   }
 }
