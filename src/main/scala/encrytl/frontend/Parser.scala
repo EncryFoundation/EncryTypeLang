@@ -1,6 +1,9 @@
 package encrytl.frontend
 
+import encrytl.frontend.json.JsonAst
 import fastparse.{all, core, noApi}
+
+import scala.util.{Failure, Success, Try}
 
 object WsApi extends fastparse.WhitespaceApi.Wrapper(Parser.wsComment)
 
@@ -44,7 +47,10 @@ object Parser {
 
   def schemas: P[Seq[Ast.Schema]] = P( spaces.? ~ schema.repX(0, spaces) ~ spaces.? ).map(_.toSeq)
 
-  def parseType(source: String):  core.Parsed[Ast.Type, Char, String] = ( tpe ~ End ).parse(source)
+  def parseType(source: String): Try[Ast.Type] = ( tpe ~ End ).parse(source) match {
+    case r: Parsed.Success[Ast.Type] => Success(r.value)
+    case e: Parsed.Failure => Failure(new Error(e.msg))
+  }
 
   def parse(source: String): core.Parsed[Seq[Ast.Schema], Char, String] = ( schemas ~ End ).parse(source)
 }

@@ -8,7 +8,6 @@ Type schema example:
 
     schema CustomerBox:Object(
         person:Object(name:String; age:Int);
-        history:Object(ltv:Long; bonus:Int);
         orders:List[Object(product_id:Long; amount:Long;)];
         id:Long;
     )
@@ -16,16 +15,53 @@ Type schema example:
 Json equivalent of the example above:
 
     {
-        "person":{"name":"Julia","age":23},
-        "history":{"ltv":23010,"bonus":198},
-        "orders":[{"product_id":19273421,"amount":240},{"product_id":69127344,"amount":126}],
-        "id":7564382569
+        "person" : {
+            "type" : "Object",
+            "value" : {
+                "name" : {
+                    "type" : "String",
+                    "value" : "Julia"
+                    },
+                "age" : {
+                    "type" : "Int",
+                    "value" : 23
+                    }
+                }
+            },
+        "orders": {
+            "type" : "List[Object]",
+            "value" : [{
+                "product_id" : {
+                    "type" : "Long",
+                    "value" : 19273421},
+                "amount" : {
+                    "type" : "Long",
+                    "value" : 240
+                    }
+                },
+                {
+                "product_id" : {
+                    "type" : "Long",
+                    "value" : 19273421
+                    },
+                "amount" : {
+                    "type" : "Long",
+                    "value" : 240
+                    }
+                }]
+            },
+        "id" : {
+            "type" : "Long",
+            "value" : 7564382569
+        }
     }
 
 Available primitive types:
 
     Any
-    String
+    Int
     Long
+    String
     Bool
+    ByteVector
     List[T]

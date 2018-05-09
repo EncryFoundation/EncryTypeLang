@@ -2,7 +2,7 @@ organization := "com.github.oskin1"
 
 name := "encry-tl"
 
-version := "0.1.5"
+version := "0.1.6"
 
 scalaVersion := "2.12.4"
 

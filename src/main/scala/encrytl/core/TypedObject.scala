@@ -4,7 +4,8 @@ import java.nio.charset.Charset
 
 import com.google.common.primitives.Bytes
 import encrytl.core.Types.{EProduct, EType, TypeFingerprint}
-import encrytl.core.codec.{AnyCodec, AnyJsonCodec, TypesCodecShallow}
+import encrytl.core.codec.{AnyCodec, TypedObjectJsonCodec, TypesCodecShallow}
+import encrytl.frontend.Parser
 import encrytl.frontend.json.JsonAst.JsonVal
 import encrytl.frontend.json.{JsonAst, JsonParser}
 import io.circe.Json
@@ -60,31 +61,6 @@ object TypedObject {
     }
     new TypedObject(values)
   }
-}
-
-object TypedObjectJsonCodec {
-
-  import codec.Errors._
-
-  type Field = (String, EType, Any)
-
-  type Object = List[Field]
-
-  def encode(obj: TypedObject): Json = obj.fields.map { case (n, v) =>
-    n -> AnyJsonCodec.encode(v.castedValue).asJson
-  }.toMap.asJson
-
-  def decode(json: JsonVal): Try[TypedObject] = Try {
-    json match {
-      case obj: JsonAst.Obj => new TypedObject(obj.value.map { case (n, v) =>
-          n -> AnyJsonCodec.decode(v).map(r => Val(r._1, r._2))
-            .getOrElse(throw DecodingError)
-        })
-      case _ => throw new Error(s"$json is not an object")
-    }
-  }
-
-  def decode(json: Json): Try[TypedObject] = JsonParser.parse(json.noSpaces).flatMap(decode)
 }
 
 object TypedObjectCodec {

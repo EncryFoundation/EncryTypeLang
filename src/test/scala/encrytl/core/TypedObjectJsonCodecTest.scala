@@ -1,5 +1,6 @@
 package encrytl.core
 
+import encrytl.core.codec.TypedObjectJsonCodec
 import org.scalatest.{Matchers, PropSpec}
 
 class TypedObjectJsonCodecTest extends PropSpec with Matchers {
