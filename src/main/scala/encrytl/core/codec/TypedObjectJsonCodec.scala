@@ -44,7 +44,7 @@ object TypedObjectJsonCodec {
 
   def decode(json: Json): Try[TypedObject] = JsonParser.parse(json.noSpaces).flatMap(decode)
 
-  def encodeAny(v: Any): Json = v match {
+  private def encodeAny(v: Any): Json = v match {
     case int: Types.EInt.Underlying => int.asJson
     case long: Types.ELong.Underlying => long.asJson
     case bool: Types.EBoolean.Underlying => bool.asJson
@@ -55,7 +55,7 @@ object TypedObjectJsonCodec {
     case _ => throw new Exception("Unsupported type")
   }
 
-  def decodeAs(tpe: Types.EType, json: JsonVal): Try[Any] = Try {
+  private def decodeAs(tpe: Types.EType, json: JsonVal): Try[Any] = Try {
     (tpe, json) match {
       case (_: Types.EInt.type, n: JsonAst.Num) if n.value <= Int.MaxValue => n.value.toInt
       case (_: Types.ELong.type, n: JsonAst.Num) if n.value <= Long.MaxValue => n.value.toLong
