@@ -37,18 +37,25 @@ class ComplexObjectSpec extends PropSpec with Matchers {
         |                    "boolean" : true
         |                  },
         |                  {
-        |                    "variable" : "obj",
-        |                    "object" : [{"variable" : "person", "string" : "Ivan"}, {"variable" : "age", "int" : 28}]
+        |                    "variable" : "byteArray",
+        |                    "byteVector" : "#456@*bgrh#g&"
+        |                  },
+        |                  {
+        |                    "variable" : "object",
+        |                    "obj" : [{"variable" : "person", "string" : "Ivan"}, {"variable" : "age", "int" : 28}]
+        |                  },
+        |                  {
+        |                    "variable" : "collection",
+        |                    "list" : [{"variable" : "person", "string" : "Ivan"}, {"variable" : "age", "string" : "28"}]
         |                  }
         |                ]
       """.stripMargin
 
-
     val variables: List[Entity] = JsonUtil.parseJson(json)
+    val performed: List[Any] = variables.map(entity => JsonUtil.performEntity(entity))
     variables foreach println
-    variables.size shouldBe 5
-
-
+    performed foreach println
+    variables.size shouldBe 7
   }
 
 }
