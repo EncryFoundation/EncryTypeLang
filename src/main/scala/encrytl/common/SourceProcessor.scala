@@ -10,7 +10,6 @@ object SourceProcessor {
   private val interpreter = new Interpreter()
 
   def process(source: String): Try[Seq[Schema]] = Try {
-    val parsed = Parser.parse(source).get.value
-    parsed.map(s => interpreter.interpret(s).right.get)
-  }
+    Parser.parse(source).map(_.map(s => interpreter.interpret(s).get))
+  }.flatten
 }

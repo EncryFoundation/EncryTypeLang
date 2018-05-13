@@ -8,10 +8,7 @@ class Interpreter {
 
   import Interpreter._
 
-  def interpret(schema: Ast.Schema): InterpretationResult = Try(Schema(schema.id.name, interpretType(schema.tpe))) match {
-    case Success(r) => Right(r)
-    case Failure(err: InterpretationError) => Left(err)
-  }
+  def interpret(schema: Ast.Schema): InterpretationResult = Try(Schema(schema.id.name, interpretType(schema.tpe)))
 
   def interpretType(tpe: Ast.Type, shallow: Boolean = false): Types.EType = tpe match {
     case Ast.SimpleType(id, tps) =>
@@ -28,11 +25,11 @@ class Interpreter {
 
 object Interpreter {
 
-  type InterpretationResult = Either[InterpretationError, Schema]
+  type InterpretationResult = Try[Schema]
 
-  class InterpretationError extends Error
+  class InterpretationError(msg: String) extends Error(msg)
 
-  case class UnresolvedRefError(n: String) extends InterpretationError
+  case class UnresolvedRefError(n: String) extends InterpretationError(n)
 
-  case object InterpretationError extends InterpretationError
+  case object InterpretationError extends InterpretationError("Unknown interpretation error")
 }

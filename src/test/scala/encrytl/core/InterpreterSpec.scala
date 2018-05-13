@@ -24,15 +24,15 @@ class InterpreterSpec extends PropSpec with Matchers {
         |)
       """.stripMargin
 
-    val schemas = Parser.parse(source).asInstanceOf[Parsed.Success[Seq[Ast.Schema]]].value
+    val schemas = Parser.parse(source).get
 
     val interpreter = new Interpreter()
 
     val schemasInterp = schemas.map(interpreter.interpret)
 
-    schemasInterp.forall(_.isRight) shouldBe true
+    schemasInterp.forall(_.isSuccess) shouldBe true
 
-    Seq(Schema1, Schema2).zip(schemasInterp.map(_.right.get)).forall { case (s1, s2) => s1 == s2 } shouldBe true
+    Seq(Schema1, Schema2).zip(schemasInterp.map(_.get)).forall { case (s1, s2) => s1 == s2 } shouldBe true
   }
 
   property("Invalid schema interpretation (Unresolved type)") {
@@ -45,14 +45,14 @@ class InterpreterSpec extends PropSpec with Matchers {
         |)
       """.stripMargin
 
-    val types = Parser.parse(source).asInstanceOf[Parsed.Success[Seq[Ast.Type]]].value
+    val types = Parser.parse(source).get
 
-    val schemas = Parser.parse(source).asInstanceOf[Parsed.Success[Seq[Ast.Schema]]].value
+    val schemas = Parser.parse(source).get
 
     val interpreter = new Interpreter()
 
     val schemasInterp = schemas.map(interpreter.interpret)
 
-    schemasInterp.forall(_.isRight) shouldBe false
+    schemasInterp.forall(_.isSuccess) shouldBe false
   }
 }

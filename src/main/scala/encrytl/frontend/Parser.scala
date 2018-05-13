@@ -52,5 +52,8 @@ object Parser {
     case e: Parsed.Failure => Failure(new Error(e.msg))
   }
 
-  def parse(source: String): core.Parsed[Seq[Ast.Schema], Char, String] = ( schemas ~ End ).parse(source)
+  def parse(source: String): Try[Seq[Ast.Schema]] = ( schemas ~ End ).parse(source) match {
+    case r: Parsed.Success[Seq[Ast.Schema]] => Success(r.value)
+    case e: Parsed.Failure => Failure(new Error(e.msg))
+  }
 }

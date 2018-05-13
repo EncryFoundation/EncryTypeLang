@@ -1,6 +1,5 @@
 package encrytl.frontend
 
-import fastparse.all._
 import org.scalatest.{Matchers, PropSpec}
 
 class ParserSpec extends PropSpec with Matchers {
@@ -16,7 +15,7 @@ class ParserSpec extends PropSpec with Matchers {
 
     val res = Parser.parse(source)
 
-    res.isInstanceOf[Parsed.Success[Seq[Ast.Schema]]] shouldBe true
+    res.isSuccess shouldBe true
   }
 
   property("Schema with nested objects parsing") {
@@ -30,7 +29,7 @@ class ParserSpec extends PropSpec with Matchers {
 
     val res = Parser.parse(source)
 
-    res.isInstanceOf[Parsed.Success[Seq[Ast.Schema]]] shouldBe true
+    res.isSuccess shouldBe true
   }
 
   property("Schema with parametrized types parsing") {
@@ -45,6 +44,6 @@ class ParserSpec extends PropSpec with Matchers {
 
     val res = Parser.parse(source)
 
-    res.isInstanceOf[Parsed.Success[Seq[Ast.Type]]] shouldBe true
+    res.isSuccess shouldBe true
   }
 }
